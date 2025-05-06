@@ -1,4 +1,4 @@
-package org.gabriel.aeon.views
+package org.gabriel.aeon.views.clock
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
@@ -17,8 +17,16 @@ import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import org.gabriel.aeon.views.clock.faces.drawRomanNumeralsClockFace
 
 @Composable
 fun Clock(
@@ -26,6 +34,7 @@ fun Clock(
 ) {
 
   var time by remember { mutableStateOf(currentLocalTime()) }
+  val textMeasurer = rememberTextMeasurer()
 
   // Update every second
   LaunchedEffect(Unit) {
@@ -42,9 +51,11 @@ fun Clock(
       val center = Offset(size.width / 2, size.height / 2)
       val radius = size.minDimension / 2.2f
 
-      drawClockFace(
-        center, radius
-      )
+//      drawClockFace(
+//        center, radius
+//      )
+
+      drawRomanNumeralsClockFace(center, radius, textMeasurer)
 
       // Calculate angles for hands
       val hourAngle = ((time.hour % 12) + time.minute / 60f) * 30f - 90f
@@ -56,42 +67,17 @@ fun Clock(
       )
 
       drawClockHand(
-        center, minuteAngle, radius * 0.5f,  Color.DarkGray, 6f
+        center, minuteAngle, radius * 0.75f,  Color.DarkGray, 6f
       )
 
       drawClockHand(
-        center, secondAngle, radius * 0.5f,  Color.Red, 6f
+        center, secondAngle, radius * 0.9f,  Color.Red, 6f
       )
 
       // Center dot
       drawCircle(Color.Black, radius = 5f, center = center)
     }
   )
-}
-
-fun DrawScope.drawClockFace(center: Offset, radius: Float) {
-  // Outline
-  drawCircle(
-    color = Color.LightGray,
-    center = center,
-    radius = radius,
-    style = Stroke(width = 4f)
-  )
-
-  // Hour markers
-  for (i in 0 until 12) {
-    val angle = i * 30f - 90f
-    val radians = angle * (PI / 180)
-    val start = Offset(
-      x = center.x + (radius - 20) * cos(radians).toFloat(),
-      y = center.y + (radius - 20) * sin(radians).toFloat()
-    )
-    val end = Offset(
-      x = center.x + radius * cos(radians).toFloat(),
-      y = center.y + radius * sin(radians).toFloat()
-    )
-    drawLine(Color.Black, start, end, strokeWidth = 4f)
-  }
 }
 
 private fun DrawScope.drawClockHand(
@@ -107,19 +93,5 @@ private fun DrawScope.drawClockHand(
     y = center.y + length * sin(radians).toFloat()
   )
   drawLine(color, center, end, strokeWidth = strokeWidth)
-}
-
-private fun angleToOffset(center: Offset, angleDegrees: Float, length: Float): Offset {
-  val radians = angleDegrees * (PI / 180)
-  return Offset(
-    x = center.x + length * cos(radians).toFloat(),
-    y = center.y + length * sin(radians).toFloat()
-  )
-}
-
-private fun currentLocalTime(): kotlinx.datetime.LocalTime {
-  return Clock.System.now()
-    .toLocalDateTime(TimeZone.currentSystemDefault())
-    .time
 }
 
